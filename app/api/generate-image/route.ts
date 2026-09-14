@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   const providedPassword = request.headers.get("x-site-password");
-  const sitePassword = process.env.SITE_PASSWORD;
-  if (sitePassword && providedPassword !== sitePassword) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const sitePassword = process.env.SITE_PASSWORD || "1020";
+  if (providedPassword !== sitePassword) {
+    return NextResponse.json({ error: "Unauthorized: Invalid site password" }, { status: 401 });
   }
 
   try {

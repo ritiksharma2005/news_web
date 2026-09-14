@@ -147,6 +147,7 @@ function drawImageCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x:
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [sitePassword, setSitePassword] = useState("");
   const [rawText, setRawText] = useState("");
   const [language, setLanguage] = useState<"en" | "hi">("en");
   const [emoji, setEmoji] = useState("📩");
@@ -162,9 +163,12 @@ export default function Home() {
   const [genStatus, setGenStatus] = useState("");
   const [downloadStatus, setDownloadStatus] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [sitePassword, setSitePassword] = useState("");
+
+  // Strict Password Gate: Unlocks only when password entered is "1020"
+  const isUnlocked = sitePassword.trim() === "1020";
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isUnlocked) return;
     const file = e.target.files?.[0];
     if (!file) {
       setUploadedImage(null);
@@ -185,6 +189,10 @@ export default function Home() {
   };
 
   const handleGenerateImage = async () => {
+    if (!isUnlocked) {
+      setGenStatus("Enter site password (1020) to unlock.");
+      return;
+    }
     if (!headline.trim()) {
       setGenStatus("Add a headline first (generate text or type one), then generate an image.");
       return;
@@ -194,7 +202,7 @@ export default function Home() {
     try {
       const resp = await fetch("/api/generate-image", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-site-password": sitePassword },
+        headers: { "Content-Type": "application/json", "x-site-password": sitePassword.trim() },
         body: JSON.stringify({ headline }),
       });
       if (!resp.ok) {
@@ -410,6 +418,10 @@ export default function Home() {
   }, [renderCard]);
 
   const handleGenerate = async () => {
+    if (!isUnlocked) {
+      setGenStatus("Enter site password (1020) to unlock.");
+      return;
+    }
     const hasImageForExtraction = extractTextFromImage && uploadedImageBase64;
     if (!rawText.trim() && !hasImageForExtraction) {
       setGenStatus("Paste some news text, or upload an image and enable text extraction.");
@@ -429,7 +441,7 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-site-password": sitePassword,
+          "x-site-password": sitePassword.trim(),
         },
         body: JSON.stringify(body),
       });
@@ -457,6 +469,7 @@ export default function Home() {
   };
 
   const handleDownload = () => {
+    if (!isUnlocked) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement("a");
@@ -468,6 +481,7 @@ export default function Home() {
   };
 
   const handleCopyCaption = () => {
+    if (!isUnlocked) return;
     const full = caption + "\n\n" + hashtags;
     navigator.clipboard.writeText(full).then(() => {
       setDownloadStatus("Caption copied!");
@@ -480,115 +494,139 @@ export default function Home() {
       <div style={{ display: "flex", gap: 28, padding: 28, maxWidth: 1300, margin: "0 auto", alignItems: "flex-start", flexWrap: "wrap" }}>
         <div style={{ background: "white", border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 24, flex: "1 1 380px", minWidth: 340 }}>
           <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>News.nit_iit — Poster Maker</h1>
-          <p style={{ color: COLORS.muted, fontSize: 13, margin: "0 0 20px" }}>Paste any news text, tweak the AI draft, download your poster.</p>
+          <p style={{ color: COLORS.muted, fontSize: 13, margin: "0 0 20px" }}>Enter password <strong>1020</strong> to unlock the system.</p>
 
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Site password</label>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: isUnlocked ? "#047857" : "#b91c1c" }}>
+            Site password {isUnlocked ? "🔑 (Unlocked)" : "🔒 (Required: 1020)"}
+          </label>
           <input
             type="password"
             value={sitePassword}
             onChange={(e) => setSitePassword(e.target.value)}
-            style={{ width: "100%", padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8, marginBottom: 16 }}
+            placeholder="Enter password (1020)..."
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: `2px solid ${isUnlocked ? "#059669" : sitePassword ? "#dc2626" : COLORS.border}`,
+              borderRadius: 8,
+              marginBottom: 4,
+              outline: "none",
+              fontSize: 14,
+            }}
           />
-
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Paste news article or key details</label>
-          <textarea
-            value={rawText}
-            onChange={(e) => setRawText(e.target.value)}
-            placeholder="Paste the raw news text, or just a few bullet points of what happened..."
-            style={{ width: "100%", minHeight: 90, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
-          />
-
-          <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Language</label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
-                style={{ width: "100%", padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
-              >
-                <option value="en">English</option>
-                <option value="hi">Hindi</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Emoji</label>
-              <input
-                type="text"
-                value={emoji}
-                onChange={(e) => setEmoji(e.target.value)}
-                maxLength={4}
-                style={{ width: 70, textAlign: "center", padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
-              />
-            </div>
+          <div style={{ fontSize: 12, marginBottom: 16, fontWeight: 600, color: isUnlocked ? "#059669" : sitePassword ? "#dc2626" : "#d97706" }}>
+            {isUnlocked
+              ? "✅ Password correct — all controls unlocked!"
+              : sitePassword
+              ? "❌ Incorrect password. Enter 1020 to unlock."
+              : "🔒 Enter password 1020 to activate all input boxes."}
           </div>
 
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Upload image (optional)</label>
-          <input type="file" accept="image/*" onChange={handleImageUpload} />
+          <div style={{ opacity: isUnlocked ? 1 : 0.45, pointerEvents: isUnlocked ? "auto" : "none", transition: "opacity 0.2s" }}>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Paste news article or key details</label>
+            <textarea
+              value={rawText}
+              disabled={!isUnlocked}
+              onChange={(e) => setRawText(e.target.value)}
+              placeholder={isUnlocked ? "Paste the raw news text..." : "🔒 Enter password 1020 first..."}
+              style={{ width: "100%", minHeight: 90, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
+            />
 
-          {uploadedImageBase64 && (
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginTop: 10 }}>
-              <input
-                type="checkbox"
-                checked={extractTextFromImage}
-                onChange={(e) => setExtractTextFromImage(e.target.checked)}
-              />
-              This image is a news article/poster — read the text from it
+            <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Language</label>
+                <select
+                  value={language}
+                  disabled={!isUnlocked}
+                  onChange={(e) => setLanguage(e.target.value as "en" | "hi")}
+                  style={{ width: "100%", padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
+                >
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Emoji</label>
+                <input
+                  type="text"
+                  value={emoji}
+                  disabled={!isUnlocked}
+                  onChange={(e) => setEmoji(e.target.value)}
+                  maxLength={4}
+                  style={{ width: 70, textAlign: "center", padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
+                />
+              </div>
+            </div>
+
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Upload image (optional)</label>
+            <input type="file" accept="image/*" disabled={!isUnlocked} onChange={handleImageUpload} />
+
+            {uploadedImageBase64 && (
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginTop: 10 }}>
+                <input
+                  type="checkbox"
+                  disabled={!isUnlocked}
+                  checked={extractTextFromImage}
+                  onChange={(e) => setExtractTextFromImage(e.target.checked)}
+                />
+                This image is a news article/poster — read the text from it
+              </label>
+            )}
+
+            <button
+              onClick={handleGenerateImage}
+              disabled={!isUnlocked || isGeneratingImage}
+              style={{
+                background: "#e0f2fe",
+                color: COLORS.accentDark,
+                width: "100%",
+                marginTop: 10,
+                padding: "9px 18px",
+                borderRadius: 8,
+                border: "none",
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: !isUnlocked || isGeneratingImage ? "not-allowed" : "pointer",
+                opacity: !isUnlocked || isGeneratingImage ? 0.6 : 1,
+              }}
+            >
+              🎨 Or generate an image with AI (uses current headline)
+            </button>
+
+            <button
+              onClick={handleGenerate}
+              disabled={!isUnlocked || isGenerating}
+              style={{
+                background: COLORS.accent,
+                color: "white",
+                width: "100%",
+                marginTop: 10,
+                padding: "11px 18px",
+                borderRadius: 8,
+                border: "none",
+                fontWeight: 600,
+                cursor: !isUnlocked || isGenerating ? "not-allowed" : "pointer",
+                opacity: !isUnlocked || isGenerating ? 0.6 : 1,
+              }}
+            >
+              ✨ Generate headline, summary & caption with AI
+            </button>
+            <div style={{ fontSize: 12.5, color: COLORS.muted, marginTop: 8, minHeight: 16 }}>{genStatus}</div>
+
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Headline</label>
+            <textarea value={headline} disabled={!isUnlocked} onChange={(e) => setHeadline(e.target.value)} style={{ width: "100%", minHeight: 50, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
+
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>
+              Summary (use **word** to highlight in cyan)
             </label>
-          )}
+            <textarea value={summary} disabled={!isUnlocked} onChange={(e) => setSummary(e.target.value)} style={{ width: "100%", minHeight: 70, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
 
-          <button
-            onClick={handleGenerateImage}
-            disabled={isGeneratingImage}
-            style={{
-              background: "#e0f2fe",
-              color: COLORS.accentDark,
-              width: "100%",
-              marginTop: 10,
-              padding: "9px 18px",
-              borderRadius: 8,
-              border: "none",
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: isGeneratingImage ? "not-allowed" : "pointer",
-              opacity: isGeneratingImage ? 0.6 : 1,
-            }}
-          >
-            🎨 Or generate an image with AI (uses current headline)
-          </button>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Caption</label>
+            <textarea value={caption} disabled={!isUnlocked} onChange={(e) => setCaption(e.target.value)} style={{ width: "100%", minHeight: 70, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
 
-          <button
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            style={{
-              background: COLORS.accent,
-              color: "white",
-              width: "100%",
-              marginTop: 10,
-              padding: "11px 18px",
-              borderRadius: 8,
-              border: "none",
-              fontWeight: 600,
-              cursor: isGenerating ? "not-allowed" : "pointer",
-              opacity: isGenerating ? 0.6 : 1,
-            }}
-          >
-            ✨ Generate headline, summary & caption with AI
-          </button>
-          <div style={{ fontSize: 12.5, color: COLORS.muted, marginTop: 8, minHeight: 16 }}>{genStatus}</div>
-
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Headline</label>
-          <textarea value={headline} onChange={(e) => setHeadline(e.target.value)} style={{ width: "100%", minHeight: 50, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
-
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>
-            Summary (use **word** to highlight in cyan)
-          </label>
-          <textarea value={summary} onChange={(e) => setSummary(e.target.value)} style={{ width: "100%", minHeight: 70, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
-
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Caption</label>
-          <textarea value={caption} onChange={(e) => setCaption(e.target.value)} style={{ width: "100%", minHeight: 70, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
-
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Hashtags</label>
-          <textarea value={hashtags} onChange={(e) => setHashtags(e.target.value)} style={{ width: "100%", minHeight: 50, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Hashtags</label>
+            <textarea value={hashtags} disabled={!isUnlocked} onChange={(e) => setHashtags(e.target.value)} style={{ width: "100%", minHeight: 50, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
+          </div>
         </div>
 
         <div style={{ flex: "1 1 420px", minWidth: 340, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
@@ -597,10 +635,10 @@ export default function Home() {
             style={{ width: "100%", maxWidth: 420, aspectRatio: "1 / 1", borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
           />
           <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 420 }}>
-            <button onClick={handleDownload} style={{ flex: 1, background: COLORS.text, color: "white", padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={handleDownload} disabled={!isUnlocked} style={{ flex: 1, background: isUnlocked ? COLORS.text : "#9ca3af", color: "white", padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: isUnlocked ? "pointer" : "not-allowed" }}>
               ⬇ Download poster
             </button>
-            <button onClick={handleCopyCaption} style={{ flex: 1, background: "#e0f2fe", color: COLORS.accentDark, padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={handleCopyCaption} disabled={!isUnlocked} style={{ flex: 1, background: "#e0f2fe", color: COLORS.accentDark, padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: isUnlocked ? "pointer" : "not-allowed" }}>
               📋 Copy caption
             </button>
           </div>
