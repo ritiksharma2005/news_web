@@ -10,7 +10,7 @@ const COLORS = {
   accentDark: "#0369a1",
   accentTint: "#ffffff",
   border: "#0284c7",
-  placeholder: "#e1e1e1",
+  placeholder: "#e2e8f0",
 };
 
 interface RichWord {
@@ -221,8 +221,8 @@ export default function Home() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Dummy headline & summary defaults as requested
-    const displayHeadline = headline || "Headline Goes Here — Short One Line News Title";
+    // Clean, short dummy defaults
+    const displayHeadline = headline || "Sample News Headline — Catchy One Line Title";
     const displaySummary =
       summary ||
       "This is a **sample news summary**. Add key details here to highlight **important updates** and **numbers** in cyan.";
@@ -236,7 +236,7 @@ export default function Home() {
     canvas.width = W;
     canvas.height = H;
 
-    // Fill background
+    // Background
     ctx.fillStyle = COLORS.bg;
     ctx.fillRect(0, 0, W, H);
 
@@ -244,18 +244,18 @@ export default function Home() {
     ctx.fillStyle = COLORS.accent;
     ctx.fillRect(0, 0, W, 14);
 
-    // 2. Top Header Bar
+    // 2. Top Header Bar (Fixed height)
     let cy = 14;
     const barHeight = 70;
     ctx.font = `bold 34px ${fontFamily}`;
     ctx.fillStyle = COLORS.text;
     ctx.textBaseline = "middle";
 
-    // Left: 2026
+    // Top Left: 2026
     ctx.textAlign = "left";
     ctx.fillText("2026", paddingX, cy + barHeight / 2);
 
-    // Right: news.nit_iit
+    // Top Right: news.nit_iit
     ctx.textAlign = "right";
     ctx.fillText("news.nit_iit", W - paddingX, cy + barHeight / 2);
 
@@ -271,64 +271,78 @@ export default function Home() {
     ctx.moveTo(0, cy + 10);
     ctx.lineTo(W, cy + 10);
     ctx.stroke();
-    cy += 20;
 
-    // 3. Headline Area
-    cy += 20;
+    // 3. Fixed Headline Slot (Strictly 2 lines max with auto font scaling)
+    const headlineSlotTop = 120;
+    const emojiPrefixWidth = 70;
+    const maxHeadlineWidth = W - paddingX * 2 - emojiPrefixWidth;
+
+    let headlineFontSize = 44;
+    let headlineLines: string[] = [];
+
+    while (headlineFontSize >= 28) {
+      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
+      headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
+      if (headlineLines.length <= 2) break;
+      headlineFontSize -= 2;
+    }
+
+    if (headlineLines.length > 2) {
+      headlineLines = headlineLines.slice(0, 2);
+      let secondLine = headlineLines[1];
+      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
+      ctx.font = testFont;
+      while (secondLine.length > 0 && ctx.measureText(secondLine + "...").width > maxHeadlineWidth) {
+        secondLine = secondLine.slice(0, -1);
+      }
+      headlineLines[1] = secondLine.trim() + "...";
+    }
+
+    const selectedHeadlineFont = `bold ${headlineFontSize}px ${fontFamily}`;
+    const headlineLineHeight = 52;
+
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    ctx.font = "48px sans-serif";
-    ctx.fillText(emoji || "📩", paddingX, cy + 40);
+    ctx.font = "46px sans-serif";
+    ctx.fillText(emoji || "📩", paddingX, headlineSlotTop + 38);
 
-    const headlineFont = `bold 46px ${fontFamily}`;
-    const emojiPrefixWidth = 70;
-    const headlineLines = wrapText(ctx, displayHeadline, headlineFont, W - paddingX * 2 - emojiPrefixWidth);
-    const headlineLineHeight = 56;
-
-    ctx.font = headlineFont;
+    ctx.font = selectedHeadlineFont;
     ctx.fillStyle = COLORS.text;
-    headlineLines.slice(0, 2).forEach((line, i) => {
+    headlineLines.forEach((line, i) => {
       const x = i === 0 ? paddingX + emojiPrefixWidth : paddingX;
-      ctx.fillText(line, x, cy + 40);
-      cy += headlineLineHeight;
+      ctx.fillText(line, x, headlineSlotTop + 38 + i * headlineLineHeight);
     });
 
-    cy += 12;
+    // Fixed Accent Underline Bar at y = 245
+    const underlineY = 245;
     ctx.strokeStyle = COLORS.accent;
     ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(paddingX, cy);
-    ctx.lineTo(paddingX + 220, cy);
+    ctx.moveTo(paddingX, underlineY);
+    ctx.lineTo(paddingX + 220, underlineY);
     ctx.stroke();
     ctx.strokeStyle = COLORS.text;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(paddingX + 230, cy);
-    ctx.lineTo(W - paddingX, cy);
+    ctx.moveTo(paddingX + 230, underlineY);
+    ctx.lineTo(W - paddingX, underlineY);
     ctx.stroke();
-    cy += 20;
 
-    // 4. Fixed Height Image Block (500px)
-    const imageBlockHeight = 500;
+    // 4. STRICTLY FIXED IMAGE BLOCK (Y: 265 to 805, Height: 540px, Width: 1080px)
+    const imageBlockY = 265;
+    const imageBlockHeight = 540;
+
     if (uploadedImage) {
-      drawImageCover(ctx, uploadedImage, 0, cy, W, imageBlockHeight);
+      drawImageCover(ctx, uploadedImage, 0, imageBlockY, W, imageBlockHeight);
     } else {
-      ctx.fillStyle = COLORS.placeholder;
-      ctx.fillRect(0, cy, W, imageBlockHeight);
-      ctx.fillStyle = COLORS.muted;
-      ctx.font = "28px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("image", W / 2, cy + imageBlockHeight / 2);
-      ctx.textAlign = "left";
-      ctx.textBaseline = "alphabetic";
+      // Clean blank grey placeholder — NO TEXT INSIDE IMAGE!
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
-    cy += imageBlockHeight;
 
-    // 5. Summary Box (Fills available space up to footer)
-    const summaryBoxTop = cy + 20;
-    const footerSeparatorY = H - 75;
-    const summaryBoxHeight = Math.max(180, footerSeparatorY - summaryBoxTop - 25);
+    // 5. STRICTLY FIXED SUMMARY BOX (Y: 830 to 1245, Height: 415px)
+    const summaryBoxTop = 830;
+    const summaryBoxHeight = 415;
     const boxWidth = W - paddingX * 2;
 
     roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 16);
@@ -351,8 +365,8 @@ export default function Home() {
 
     ctx.font = summaryFont;
     ctx.textBaseline = "alphabetic";
-    let ty = summaryBoxTop + 40;
-    const maxSummaryLines = Math.floor((summaryBoxHeight - 40) / summaryLineHeight);
+    let ty = summaryBoxTop + 44;
+    const maxSummaryLines = Math.floor((summaryBoxHeight - 44) / summaryLineHeight);
 
     summaryLines.slice(0, maxSummaryLines).forEach((line) => {
       let tx = paddingX + 44;
@@ -364,7 +378,8 @@ export default function Home() {
       ty += summaryLineHeight;
     });
 
-    // 6. Fixed Footer
+    // 6. STRICTLY FIXED FOOTER (Separator Y: 1270, Text Y: 1312)
+    const footerSeparatorY = 1270;
     ctx.strokeStyle = COLORS.border;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -372,7 +387,7 @@ export default function Home() {
     ctx.lineTo(W - 80, footerSeparatorY);
     ctx.stroke();
 
-    const footerTextY = H - 35;
+    const footerTextY = 1312;
     const footerEmoji = "📷";
     const handle = "@news.nit_iit";
     ctx.font = "bold 32px " + fontFamily;
