@@ -6,12 +6,98 @@ const COLORS = {
   bg: "#f7f0dc",
   text: "#141414",
   muted: "#5a5a5a",
-  accent: "#d85a30",
-  accentDark: "#993c1d",
-  accentTint: "#faece7",
-  border: "#e6e6e6",
+  accent: "#0284c7",
+  accentDark: "#0369a1",
+  accentTint: "#ffffff",
+  border: "#0284c7",
   placeholder: "#e1e1e1",
 };
+
+interface RichWord {
+  text: string;
+  isHighlighted: boolean;
+}
+
+interface RichLine {
+  words: RichWord[];
+}
+
+function parseFormattedTextToWords(text: string): RichWord[] {
+  const words: RichWord[] = [];
+  const regex = /(\*\*.*?\*\*|\*.*?\*)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      const normalPart = text.slice(lastIndex, match.index);
+      const splitNormal = normalPart.split(/(\s+)/);
+      for (const w of splitNormal) {
+        if (w) words.push({ text: w, isHighlighted: false });
+      }
+    }
+    const rawMatch = match[0];
+    const cleanText = rawMatch.replace(/^\*+|\*+$/g, "");
+    const splitClean = cleanText.split(/(\s+)/);
+    for (const w of splitClean) {
+      if (w) words.push({ text: w, isHighlighted: true });
+    }
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    const normalPart = text.slice(lastIndex);
+    const splitNormal = normalPart.split(/(\s+)/);
+    for (const w of splitNormal) {
+      if (w) words.push({ text: w, isHighlighted: false });
+    }
+  }
+
+  return words;
+}
+
+function wrapRichWords(
+  ctx: CanvasRenderingContext2D,
+  words: RichWord[],
+  font: string,
+  maxWidth: number
+): RichLine[] {
+  ctx.font = font;
+  const lines: RichLine[] = [];
+  let currentLine: RichWord[] = [];
+  let currentWidth = 0;
+
+  for (const item of words) {
+    if (item.text === "\n") {
+      lines.push({ words: currentLine });
+      currentLine = [];
+      currentWidth = 0;
+      continue;
+    }
+
+    const itemWidth = ctx.measureText(item.text).width;
+
+    if (currentWidth + itemWidth <= maxWidth || currentLine.length === 0) {
+      currentLine.push(item);
+      currentWidth += itemWidth;
+    } else {
+      lines.push({ words: currentLine });
+      if (item.text.trim() === "") {
+        currentLine = [];
+        currentWidth = 0;
+      } else {
+        currentLine = [item];
+        currentWidth = itemWidth;
+      }
+    }
+  }
+
+  if (currentLine.length > 0) {
+    lines.push({ words: currentLine });
+  }
+
+  return lines;
+}
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, font: string, maxWidth: number) {
   ctx.font = font;
@@ -119,7 +205,7 @@ export default function Home() {
       const img = new Image();
       img.onload = () => setUploadedImage(img);
       img.src = `data:${data.mimeType};base64,${data.imageBase64}`;
-      setUploadedImageBase64(null); // AI-generated image isn't a source for OCR
+      setUploadedImageBase64(null);
       setGenStatus("Image generated!");
     } catch (err) {
       console.error(err);
@@ -135,8 +221,10 @@ export default function Home() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const displayHeadline = headline || "Your headline goes here";
-    const displaySummary = summary || "Your 2-3 line summary will appear here once generated.";
+    const displayHeadline = headline || "IIT Bombay Opens National Innovation Hackathon 2026: Registrations Now Open";
+    const displaySummary =
+      summary ||
+      "**IIT** Bombay has officially launched its flagship National Innovation **Hackathon 2026** for all engineering and technology undergraduates across India. Eligible teams can submit projects by **September 25** with grants worth up to **10 Lakhs.**";
     const fontFamily = language === "hi" ? '"Nirmala UI","Noto Sans Devanagari",sans-serif' : "-apple-system,\"Segoe UI\",Roboto,sans-serif";
 
     const W = 1080;
@@ -153,12 +241,13 @@ export default function Home() {
     const imageBlockHeight = 480;
     y += imageBlockHeight;
 
-    const summaryFont = `34px ${fontFamily}`;
+    const summaryFont = `bold 34px ${fontFamily}`;
     const summaryMaxWidth = W - paddingX * 2 - 10 - 60;
-    const summaryLines = wrapText(ctx, displaySummary, summaryFont, summaryMaxWidth);
-    const summaryLineHeight = 51;
-    const summaryBoxPadding = 30;
-    const summaryBoxHeight = Math.min(summaryLines.length, 4) * summaryLineHeight + summaryBoxPadding * 2;
+    const richWords = parseFormattedTextToWords(displaySummary);
+    const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
+    const summaryLineHeight = 52;
+    const summaryBoxPadding = 26;
+    const summaryBoxHeight = Math.max(2, Math.min(summaryLines.length, 5)) * summaryLineHeight + summaryBoxPadding * 2;
     const summaryBoxTop = y + 25;
     y = summaryBoxTop + summaryBoxHeight;
 
@@ -179,13 +268,14 @@ export default function Home() {
     ctx.font = `bold 34px ${fontFamily}`;
     ctx.fillStyle = COLORS.text;
     ctx.textBaseline = "middle";
-    ctx.textAlign = "left";
-    ctx.fillText("News.nit_iit", paddingX, cy + barHeight / 2);
 
-    ctx.font = `bold 30px ${fontFamily}`;
-    ctx.fillStyle = COLORS.accentDark;
+    // Top left: 2026
+    ctx.textAlign = "left";
+    ctx.fillText("2026", paddingX, cy + barHeight / 2);
+
+    // Top right: news.nit_iit
     ctx.textAlign = "right";
-    ctx.fillText("2026", W - paddingX, cy + barHeight / 2);
+    ctx.fillText("news.nit_iit", W - paddingX, cy + barHeight / 2);
 
     cy += barHeight;
     ctx.strokeStyle = COLORS.text;
@@ -218,12 +308,12 @@ export default function Home() {
     ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.moveTo(paddingX, cy);
-    ctx.lineTo(paddingX + 140, cy);
+    ctx.lineTo(paddingX + 220, cy);
     ctx.stroke();
     ctx.strokeStyle = COLORS.text;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(paddingX + 150, cy);
+    ctx.moveTo(paddingX + 230, cy);
     ctx.lineTo(W - paddingX, cy);
     ctx.stroke();
     cy += 25;
@@ -245,24 +335,30 @@ export default function Home() {
 
     const boxTop = cy + 25;
     const boxRight = W - paddingX;
-    roundRect(ctx, paddingX, boxTop, boxRight - paddingX, summaryBoxHeight, 16);
+    const boxWidth = boxRight - paddingX;
+
+    roundRect(ctx, paddingX, boxTop, boxWidth, summaryBoxHeight, 16);
     ctx.fillStyle = COLORS.accentTint;
     ctx.fill();
-    ctx.strokeStyle = COLORS.accent;
+    ctx.strokeStyle = COLORS.border;
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    roundRect(ctx, paddingX, boxTop, 26, summaryBoxHeight, 16);
+    roundRect(ctx, paddingX, boxTop, 20, summaryBoxHeight, 16);
     ctx.fillStyle = COLORS.accent;
     ctx.fill();
-    ctx.fillRect(paddingX + 10, boxTop, 16, summaryBoxHeight);
+    ctx.fillRect(paddingX + 8, boxTop, 12, summaryBoxHeight);
 
     ctx.font = summaryFont;
-    ctx.fillStyle = COLORS.accentDark;
     ctx.textBaseline = "alphabetic";
-    let ty = boxTop + summaryBoxPadding + 24;
-    summaryLines.slice(0, 4).forEach((line) => {
-      ctx.fillText(line, paddingX + 40, ty);
+    let ty = boxTop + summaryBoxPadding + 28;
+    summaryLines.slice(0, 5).forEach((line) => {
+      let tx = paddingX + 44;
+      line.words.forEach((w) => {
+        ctx.fillStyle = w.isHighlighted ? COLORS.accent : COLORS.text;
+        ctx.fillText(w.text, tx, ty);
+        tx += ctx.measureText(w.text).width;
+      });
       ty += summaryLineHeight;
     });
 
@@ -276,21 +372,21 @@ export default function Home() {
     ctx.stroke();
 
     const footerTextY = separatorY + 45;
-    const footerEmoji = "📸";
+    const footerEmoji = "📷";
     const handle = "@news.nit_iit";
     ctx.font = "bold 32px " + fontFamily;
     const handleWidth = ctx.measureText(handle).width;
-    ctx.font = "36px sans-serif";
+    ctx.font = "32px sans-serif";
     const emojiWidth = ctx.measureText(footerEmoji).width;
     const gap = 12;
     const totalWidth = emojiWidth + gap + handleWidth;
     const startX = (W - totalWidth) / 2;
 
     ctx.textAlign = "left";
-    ctx.font = "36px sans-serif";
+    ctx.font = "32px sans-serif";
     ctx.fillText(footerEmoji, startX, footerTextY + 10);
     ctx.font = "bold 32px " + fontFamily;
-    ctx.fillStyle = COLORS.accentDark;
+    ctx.fillStyle = COLORS.accent;
     ctx.fillText(handle, startX + emojiWidth + gap, footerTextY + 10);
   }, [headline, summary, language, emoji, uploadedImage]);
 
@@ -429,7 +525,7 @@ export default function Home() {
             onClick={handleGenerateImage}
             disabled={isGeneratingImage}
             style={{
-              background: COLORS.accentTint,
+              background: "#e0f2fe",
               color: COLORS.accentDark,
               width: "100%",
               marginTop: 10,
@@ -468,7 +564,9 @@ export default function Home() {
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Headline</label>
           <textarea value={headline} onChange={(e) => setHeadline(e.target.value)} style={{ width: "100%", minHeight: 50, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
 
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Summary</label>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>
+            Summary (use **word** to highlight in cyan)
+          </label>
           <textarea value={summary} onChange={(e) => setSummary(e.target.value)} style={{ width: "100%", minHeight: 70, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }} />
 
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, margin: "16px 0 6px" }}>Caption</label>
@@ -487,7 +585,7 @@ export default function Home() {
             <button onClick={handleDownload} style={{ flex: 1, background: COLORS.text, color: "white", padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: "pointer" }}>
               ⬇ Download poster
             </button>
-            <button onClick={handleCopyCaption} style={{ flex: 1, background: COLORS.accentTint, color: COLORS.accentDark, padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={handleCopyCaption} style={{ flex: 1, background: "#e0f2fe", color: COLORS.accentDark, padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: "pointer" }}>
               📋 Copy caption
             </button>
           </div>

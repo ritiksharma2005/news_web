@@ -23,7 +23,7 @@ ${languageInstruction}
 
 Write, in your own original words (do not copy phrasing from the input):
 1. A short punchy headline (under 15 words)
-2. A 2-3 line summary (max 50 words)
+2. A 2-3 line summary (max 50 words). IMPORTANT: Wrap key highlights, dates, amounts, numbers, event names, and organization names in double asterisks like **IIT**, **September 25**, **10 Lakhs.** so they can be highlighted on the poster card.
 3. A short Instagram caption (2-4 lines, 1-2 emojis, engaging tone, maybe a question to invite comments)
 4. 8-10 relevant hashtags as a single space-separated string
 
