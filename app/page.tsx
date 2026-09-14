@@ -221,11 +221,11 @@ export default function Home() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clean, short dummy defaults
-    const displayHeadline = headline || "Sample News Headline — Catchy One Line Title";
+    // Clean dummy defaults
+    const displayHeadline = headline || "Sample News Headline — Extended Headline Space with Full Details";
     const displaySummary =
       summary ||
-      "This is a **sample news summary**. Add key details here to highlight **important updates** and **numbers** in cyan.";
+      "This is a **sample summary**. Add key details here to highlight **important updates** and **numbers** in cyan.";
     const fontFamily = language === "hi" ? '"Nirmala UI","Noto Sans Devanagari",sans-serif' : "-apple-system,\"Segoe UI\",Roboto,sans-serif";
 
     // Strictly fixed 4:5 Aspect Ratio (1080 x 1350 px)
@@ -244,7 +244,7 @@ export default function Home() {
     ctx.fillStyle = COLORS.accent;
     ctx.fillRect(0, 0, W, 14);
 
-    // 2. Top Header Bar (Fixed height)
+    // 2. Top Header Bar
     let cy = 14;
     const barHeight = 70;
     ctx.font = `bold 34px ${fontFamily}`;
@@ -272,30 +272,30 @@ export default function Home() {
     ctx.lineTo(W, cy + 10);
     ctx.stroke();
 
-    // 3. Fixed Headline Slot (Strictly 2 lines max with auto font scaling)
-    const headlineSlotTop = 120;
+    // 3. EXPANDED HEADLINE SLOT (Up to 3 full lines allowed!)
+    const headlineSlotTop = 118;
     const emojiPrefixWidth = 70;
     const maxHeadlineWidth = W - paddingX * 2 - emojiPrefixWidth;
 
-    let headlineFontSize = 44;
+    let headlineFontSize = 46;
     let headlineLines: string[] = [];
 
     while (headlineFontSize >= 28) {
       const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
-      if (headlineLines.length <= 2) break;
+      if (headlineLines.length <= 3) break;
       headlineFontSize -= 2;
     }
 
-    if (headlineLines.length > 2) {
-      headlineLines = headlineLines.slice(0, 2);
-      let secondLine = headlineLines[1];
+    if (headlineLines.length > 3) {
+      headlineLines = headlineLines.slice(0, 3);
+      let thirdLine = headlineLines[2];
       const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       ctx.font = testFont;
-      while (secondLine.length > 0 && ctx.measureText(secondLine + "...").width > maxHeadlineWidth) {
-        secondLine = secondLine.slice(0, -1);
+      while (thirdLine.length > 0 && ctx.measureText(thirdLine + "...").width > maxHeadlineWidth) {
+        thirdLine = thirdLine.slice(0, -1);
       }
-      headlineLines[1] = secondLine.trim() + "...";
+      headlineLines[2] = thirdLine.trim() + "...";
     }
 
     const selectedHeadlineFont = `bold ${headlineFontSize}px ${fontFamily}`;
@@ -313,8 +313,8 @@ export default function Home() {
       ctx.fillText(line, x, headlineSlotTop + 38 + i * headlineLineHeight);
     });
 
-    // Fixed Accent Underline Bar at y = 245
-    const underlineY = 245;
+    // Fixed Accent Underline Bar at y = 285
+    const underlineY = 285;
     ctx.strokeStyle = COLORS.accent;
     ctx.lineWidth = 6;
     ctx.beginPath();
@@ -328,21 +328,20 @@ export default function Home() {
     ctx.lineTo(W - paddingX, underlineY);
     ctx.stroke();
 
-    // 4. STRICTLY FIXED IMAGE BLOCK (Y: 265 to 805, Height: 540px, Width: 1080px)
-    const imageBlockY = 265;
-    const imageBlockHeight = 540;
+    // 4. STRICTLY FIXED IMAGE BLOCK (Y: 300 to 820, Height: 520px, Width: 1080px)
+    const imageBlockY = 300;
+    const imageBlockHeight = 520;
 
     if (uploadedImage) {
       drawImageCover(ctx, uploadedImage, 0, imageBlockY, W, imageBlockHeight);
     } else {
-      // Clean blank grey placeholder — NO TEXT INSIDE IMAGE!
       ctx.fillStyle = "#e2e8f0";
       ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
 
-    // 5. STRICTLY FIXED SUMMARY BOX (Y: 830 to 1245, Height: 415px)
-    const summaryBoxTop = 830;
-    const summaryBoxHeight = 415;
+    // 5. DECREASED / COMPACT SUMMARY BOX (Y: 840 to 1245, Height: 405px -> 290px compact fit)
+    const summaryBoxTop = 845;
+    const summaryBoxHeight = 290;
     const boxWidth = W - paddingX * 2;
 
     roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 16);
@@ -357,16 +356,16 @@ export default function Home() {
     ctx.fill();
     ctx.fillRect(paddingX + 8, summaryBoxTop, 12, summaryBoxHeight);
 
-    const summaryFont = `bold 32px ${fontFamily}`;
+    const summaryFont = `bold 30px ${fontFamily}`;
     const summaryMaxWidth = boxWidth - 60;
     const richWords = parseFormattedTextToWords(displaySummary);
     const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
-    const summaryLineHeight = 48;
+    const summaryLineHeight = 44;
 
     ctx.font = summaryFont;
     ctx.textBaseline = "alphabetic";
-    let ty = summaryBoxTop + 44;
-    const maxSummaryLines = Math.floor((summaryBoxHeight - 44) / summaryLineHeight);
+    let ty = summaryBoxTop + 38;
+    const maxSummaryLines = Math.floor((summaryBoxHeight - 38) / summaryLineHeight);
 
     summaryLines.slice(0, maxSummaryLines).forEach((line) => {
       let tx = paddingX + 44;
