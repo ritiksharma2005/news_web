@@ -164,7 +164,7 @@ export default function Home() {
   const [downloadStatus, setDownloadStatus] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Strict Password Gate: Unlocks only when password entered is "1020"
+  // Password verification (1020)
   const isUnlocked = sitePassword.trim() === "1020";
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,7 +190,7 @@ export default function Home() {
 
   const handleGenerateImage = async () => {
     if (!isUnlocked) {
-      setGenStatus("Enter site password (1020) to unlock.");
+      setGenStatus("Enter password to unlock.");
       return;
     }
     if (!headline.trim()) {
@@ -419,7 +419,7 @@ export default function Home() {
 
   const handleGenerate = async () => {
     if (!isUnlocked) {
-      setGenStatus("Enter site password (1020) to unlock.");
+      setGenStatus("Enter password to unlock.");
       return;
     }
     const hasImageForExtraction = extractTextFromImage && uploadedImageBase64;
@@ -494,16 +494,16 @@ export default function Home() {
       <div style={{ display: "flex", gap: 28, padding: 28, maxWidth: 1300, margin: "0 auto", alignItems: "flex-start", flexWrap: "wrap" }}>
         <div style={{ background: "white", border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 24, flex: "1 1 380px", minWidth: 340 }}>
           <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>News.nit_iit — Poster Maker</h1>
-          <p style={{ color: COLORS.muted, fontSize: 13, margin: "0 0 20px" }}>Enter password <strong>1020</strong> to unlock the system.</p>
+          <p style={{ color: COLORS.muted, fontSize: 13, margin: "0 0 20px" }}>Enter password to unlock the system.</p>
 
           <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 6, color: isUnlocked ? "#047857" : "#b91c1c" }}>
-            Site password {isUnlocked ? "🔑 (Unlocked)" : "🔒 (Required: 1020)"}
+            Site password {isUnlocked ? "🔑 (Unlocked)" : "🔒"}
           </label>
           <input
             type="password"
             value={sitePassword}
             onChange={(e) => setSitePassword(e.target.value)}
-            placeholder="Enter password (1020)..."
+            placeholder="Enter site password..."
             style={{
               width: "100%",
               padding: "10px 12px",
@@ -518,8 +518,8 @@ export default function Home() {
             {isUnlocked
               ? "✅ Password correct — all controls unlocked!"
               : sitePassword
-              ? "❌ Incorrect password. Enter 1020 to unlock."
-              : "🔒 Enter password 1020 to activate all input boxes."}
+              ? "❌ Incorrect password."
+              : "🔒 Enter password to activate controls."}
           </div>
 
           <div style={{ opacity: isUnlocked ? 1 : 0.45, pointerEvents: isUnlocked ? "auto" : "none", transition: "opacity 0.2s" }}>
@@ -528,7 +528,7 @@ export default function Home() {
               value={rawText}
               disabled={!isUnlocked}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder={isUnlocked ? "Paste the raw news text..." : "🔒 Enter password 1020 first..."}
+              placeholder={isUnlocked ? "Paste the raw news text..." : "🔒 Enter password first..."}
               style={{ width: "100%", minHeight: 90, padding: "10px 12px", border: `1px solid ${COLORS.border}`, borderRadius: 8 }}
             />
 
