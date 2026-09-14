@@ -222,7 +222,7 @@ export default function Home() {
     if (!ctx) return;
 
     // Clean dummy defaults
-    const displayHeadline = headline || "Sample News Headline — Catchy Title";
+    const displayHeadline = headline || "Sample News Headline — Catchy Large Title for Full Context";
     const displaySummary =
       summary ||
       "This is a **sample summary**. Add key details here to highlight **important updates** and **numbers** in cyan.";
@@ -246,7 +246,7 @@ export default function Home() {
 
     // 2. Top Header Bar
     let cy = 14;
-    const barHeight = 60;
+    const barHeight = 56;
     ctx.font = `bold 32px ${fontFamily}`;
     ctx.fillStyle = COLORS.text;
     ctx.textBaseline = "middle";
@@ -272,65 +272,65 @@ export default function Home() {
     ctx.lineTo(W, cy + 8);
     ctx.stroke();
 
-    // 3. Headline Slot (Square Layout: 2 lines max, 38px font)
-    const headlineSlotTop = 92;
-    const emojiPrefixWidth = 60;
+    // 3. EXPANDED HEADLINE SLOT FOR 3 LARGE LINES (Font: 42px, Height: 155px)
+    const headlineSlotTop = 88;
+    const emojiPrefixWidth = 65;
     const maxHeadlineWidth = W - paddingX * 2 - emojiPrefixWidth;
 
-    let headlineFontSize = 38;
+    let headlineFontSize = 42;
     let headlineLines: string[] = [];
 
-    while (headlineFontSize >= 26) {
+    while (headlineFontSize >= 28) {
       const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
-      if (headlineLines.length <= 2) break;
+      if (headlineLines.length <= 3) break;
       headlineFontSize -= 2;
     }
 
-    if (headlineLines.length > 2) {
-      headlineLines = headlineLines.slice(0, 2);
-      let secondLine = headlineLines[1];
+    if (headlineLines.length > 3) {
+      headlineLines = headlineLines.slice(0, 3);
+      let thirdLine = headlineLines[2];
       const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       ctx.font = testFont;
-      while (secondLine.length > 0 && ctx.measureText(secondLine + "...").width > maxHeadlineWidth) {
-        secondLine = secondLine.slice(0, -1);
+      while (thirdLine.length > 0 && ctx.measureText(thirdLine + "...").width > maxHeadlineWidth) {
+        thirdLine = thirdLine.slice(0, -1);
       }
-      headlineLines[1] = secondLine.trim() + "...";
+      headlineLines[2] = thirdLine.trim() + "...";
     }
 
     const selectedHeadlineFont = `bold ${headlineFontSize}px ${fontFamily}`;
-    const headlineLineHeight = 44;
+    const headlineLineHeight = 50;
 
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    ctx.font = "40px sans-serif";
-    ctx.fillText(emoji || "📩", paddingX, headlineSlotTop + 34);
+    ctx.font = "42px sans-serif";
+    ctx.fillText(emoji || "📩", paddingX, headlineSlotTop + 38);
 
     ctx.font = selectedHeadlineFont;
     ctx.fillStyle = COLORS.text;
     headlineLines.forEach((line, i) => {
       const x = i === 0 ? paddingX + emojiPrefixWidth : paddingX;
-      ctx.fillText(line, x, headlineSlotTop + 34 + i * headlineLineHeight);
+      ctx.fillText(line, x, headlineSlotTop + 38 + i * headlineLineHeight);
     });
 
-    // Accent Underline Bar at y = 192
-    const underlineY = 192;
+    // Fixed Accent Underline Bar at y = 245
+    const underlineY = 245;
     ctx.strokeStyle = COLORS.accent;
     ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.moveTo(paddingX, underlineY);
-    ctx.lineTo(paddingX + 200, underlineY);
+    ctx.lineTo(paddingX + 220, underlineY);
     ctx.stroke();
     ctx.strokeStyle = COLORS.text;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(paddingX + 210, underlineY);
+    ctx.moveTo(paddingX + 230, underlineY);
     ctx.lineTo(W - paddingX, underlineY);
     ctx.stroke();
 
-    // 4. STRICTLY FIXED SQUARE IMAGE BLOCK (Y: 206 to 686, Height: 480px, Width: 1080px)
-    const imageBlockY = 206;
-    const imageBlockHeight = 480;
+    // 4. STRICTLY FIXED SQUARE IMAGE BLOCK (Y: 260 to 690, Height: 430px, Width: 1080px)
+    const imageBlockY = 260;
+    const imageBlockHeight = 430;
 
     if (uploadedImage) {
       drawImageCover(ctx, uploadedImage, 0, imageBlockY, W, imageBlockHeight);
@@ -339,9 +339,9 @@ export default function Home() {
       ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
 
-    // 5. STRICTLY FIXED SUMMARY BOX (Y: 704 to 994, Height: 290px)
-    const summaryBoxTop = 704;
-    const summaryBoxHeight = 290;
+    // 5. STRICTLY FIXED SUMMARY BOX (Y: 708 to 993, Height: 285px)
+    const summaryBoxTop = 708;
+    const summaryBoxHeight = 285;
     const boxWidth = W - paddingX * 2;
 
     roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 14);
