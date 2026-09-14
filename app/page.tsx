@@ -221,59 +221,41 @@ export default function Home() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const displayHeadline = headline || "IIT Bombay Opens National Innovation Hackathon 2026: Registrations Now Open";
+    // Dummy headline & summary defaults as requested
+    const displayHeadline = headline || "Headline Goes Here — Short One Line News Title";
     const displaySummary =
       summary ||
-      "**IIT** Bombay has officially launched its flagship National Innovation **Hackathon 2026** for all engineering and technology undergraduates across India. Eligible teams can submit projects by **September 25** with grants worth up to **10 Lakhs.**";
+      "This is a **sample news summary**. Add key details here to highlight **important updates** and **numbers** in cyan.";
     const fontFamily = language === "hi" ? '"Nirmala UI","Noto Sans Devanagari",sans-serif' : "-apple-system,\"Segoe UI\",Roboto,sans-serif";
 
+    // Strictly fixed 4:5 Aspect Ratio (1080 x 1350 px)
     const W = 1080;
+    const H = 1350;
     const paddingX = 40;
 
-    let y = 14;
-    y += 70 + 20;
-    const headlineFont = `bold 50px ${fontFamily}`;
-    const emojiPrefixWidth = 70;
-    const headlineLines = wrapText(ctx, displayHeadline, headlineFont, W - paddingX * 2 - emojiPrefixWidth);
-    const headlineLineHeight = 61;
-    y += 25 + headlineLines.length * headlineLineHeight + 15 + 25;
-
-    const imageBlockHeight = 480;
-    y += imageBlockHeight;
-
-    const summaryFont = `bold 34px ${fontFamily}`;
-    const summaryMaxWidth = W - paddingX * 2 - 10 - 60;
-    const richWords = parseFormattedTextToWords(displaySummary);
-    const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
-    const summaryLineHeight = 52;
-    const summaryBoxPadding = 26;
-    const summaryBoxHeight = Math.max(2, Math.min(summaryLines.length, 5)) * summaryLineHeight + summaryBoxPadding * 2;
-    const summaryBoxTop = y + 25;
-    y = summaryBoxTop + summaryBoxHeight;
-
-    const footerBottom = y + 45 + 45 + 40;
-    const finalHeight = Math.max(1080, footerBottom + 20);
-
     canvas.width = W;
-    canvas.height = finalHeight;
+    canvas.height = H;
 
+    // Fill background
     ctx.fillStyle = COLORS.bg;
-    ctx.fillRect(0, 0, W, finalHeight);
+    ctx.fillRect(0, 0, W, H);
 
+    // 1. Top Accent Stripe
     ctx.fillStyle = COLORS.accent;
     ctx.fillRect(0, 0, W, 14);
 
+    // 2. Top Header Bar
     let cy = 14;
     const barHeight = 70;
     ctx.font = `bold 34px ${fontFamily}`;
     ctx.fillStyle = COLORS.text;
     ctx.textBaseline = "middle";
 
-    // Top left: 2026
+    // Left: 2026
     ctx.textAlign = "left";
     ctx.fillText("2026", paddingX, cy + barHeight / 2);
 
-    // Top right: news.nit_iit
+    // Right: news.nit_iit
     ctx.textAlign = "right";
     ctx.fillText("news.nit_iit", W - paddingX, cy + barHeight / 2);
 
@@ -291,19 +273,27 @@ export default function Home() {
     ctx.stroke();
     cy += 20;
 
-    cy += 25;
+    // 3. Headline Area
+    cy += 20;
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
     ctx.font = "48px sans-serif";
     ctx.fillText(emoji || "📩", paddingX, cy + 40);
+
+    const headlineFont = `bold 46px ${fontFamily}`;
+    const emojiPrefixWidth = 70;
+    const headlineLines = wrapText(ctx, displayHeadline, headlineFont, W - paddingX * 2 - emojiPrefixWidth);
+    const headlineLineHeight = 56;
+
     ctx.font = headlineFont;
     ctx.fillStyle = COLORS.text;
-    headlineLines.forEach((line, i) => {
+    headlineLines.slice(0, 2).forEach((line, i) => {
       const x = i === 0 ? paddingX + emojiPrefixWidth : paddingX;
       ctx.fillText(line, x, cy + 40);
       cy += headlineLineHeight;
     });
-    cy += 15;
+
+    cy += 12;
     ctx.strokeStyle = COLORS.accent;
     ctx.lineWidth = 6;
     ctx.beginPath();
@@ -316,8 +306,10 @@ export default function Home() {
     ctx.moveTo(paddingX + 230, cy);
     ctx.lineTo(W - paddingX, cy);
     ctx.stroke();
-    cy += 25;
+    cy += 20;
 
+    // 4. Fixed Height Image Block (500px)
+    const imageBlockHeight = 500;
     if (uploadedImage) {
       drawImageCover(ctx, uploadedImage, 0, cy, W, imageBlockHeight);
     } else {
@@ -333,26 +325,36 @@ export default function Home() {
     }
     cy += imageBlockHeight;
 
-    const boxTop = cy + 25;
-    const boxRight = W - paddingX;
-    const boxWidth = boxRight - paddingX;
+    // 5. Summary Box (Fills available space up to footer)
+    const summaryBoxTop = cy + 20;
+    const footerSeparatorY = H - 75;
+    const summaryBoxHeight = Math.max(180, footerSeparatorY - summaryBoxTop - 25);
+    const boxWidth = W - paddingX * 2;
 
-    roundRect(ctx, paddingX, boxTop, boxWidth, summaryBoxHeight, 16);
+    roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 16);
     ctx.fillStyle = COLORS.accentTint;
     ctx.fill();
     ctx.strokeStyle = COLORS.border;
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    roundRect(ctx, paddingX, boxTop, 20, summaryBoxHeight, 16);
+    roundRect(ctx, paddingX, summaryBoxTop, 20, summaryBoxHeight, 16);
     ctx.fillStyle = COLORS.accent;
     ctx.fill();
-    ctx.fillRect(paddingX + 8, boxTop, 12, summaryBoxHeight);
+    ctx.fillRect(paddingX + 8, summaryBoxTop, 12, summaryBoxHeight);
+
+    const summaryFont = `bold 32px ${fontFamily}`;
+    const summaryMaxWidth = boxWidth - 60;
+    const richWords = parseFormattedTextToWords(displaySummary);
+    const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
+    const summaryLineHeight = 48;
 
     ctx.font = summaryFont;
     ctx.textBaseline = "alphabetic";
-    let ty = boxTop + summaryBoxPadding + 28;
-    summaryLines.slice(0, 5).forEach((line) => {
+    let ty = summaryBoxTop + 40;
+    const maxSummaryLines = Math.floor((summaryBoxHeight - 40) / summaryLineHeight);
+
+    summaryLines.slice(0, maxSummaryLines).forEach((line) => {
       let tx = paddingX + 44;
       line.words.forEach((w) => {
         ctx.fillStyle = w.isHighlighted ? COLORS.accent : COLORS.text;
@@ -362,16 +364,15 @@ export default function Home() {
       ty += summaryLineHeight;
     });
 
-    const summaryBottom = boxTop + summaryBoxHeight;
-    const separatorY = summaryBottom + 45;
+    // 6. Fixed Footer
     ctx.strokeStyle = COLORS.border;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(80, separatorY);
-    ctx.lineTo(W - 80, separatorY);
+    ctx.moveTo(80, footerSeparatorY);
+    ctx.lineTo(W - 80, footerSeparatorY);
     ctx.stroke();
 
-    const footerTextY = separatorY + 45;
+    const footerTextY = H - 35;
     const footerEmoji = "📷";
     const handle = "@news.nit_iit";
     ctx.font = "bold 32px " + fontFamily;
@@ -384,10 +385,10 @@ export default function Home() {
 
     ctx.textAlign = "left";
     ctx.font = "32px sans-serif";
-    ctx.fillText(footerEmoji, startX, footerTextY + 10);
+    ctx.fillText(footerEmoji, startX, footerTextY);
     ctx.font = "bold 32px " + fontFamily;
     ctx.fillStyle = COLORS.accent;
-    ctx.fillText(handle, startX + emojiWidth + gap, footerTextY + 10);
+    ctx.fillText(handle, startX + emojiWidth + gap, footerTextY);
   }, [headline, summary, language, emoji, uploadedImage]);
 
   useEffect(() => {
@@ -579,7 +580,7 @@ export default function Home() {
         <div style={{ flex: "1 1 420px", minWidth: 340, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <canvas
             ref={canvasRef}
-            style={{ width: "100%", maxWidth: 420, borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
+            style={{ width: "100%", maxWidth: 420, aspectRatio: "4 / 5", borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
           />
           <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 420 }}>
             <button onClick={handleDownload} style={{ flex: 1, background: COLORS.text, color: "white", padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: "pointer" }}>
