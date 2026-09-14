@@ -222,15 +222,15 @@ export default function Home() {
     if (!ctx) return;
 
     // Clean dummy defaults
-    const displayHeadline = headline || "Sample News Headline — Extended Headline Space with Full Details";
+    const displayHeadline = headline || "Sample News Headline — Catchy Title";
     const displaySummary =
       summary ||
       "This is a **sample summary**. Add key details here to highlight **important updates** and **numbers** in cyan.";
     const fontFamily = language === "hi" ? '"Nirmala UI","Noto Sans Devanagari",sans-serif' : "-apple-system,\"Segoe UI\",Roboto,sans-serif";
 
-    // Strictly fixed 4:5 Aspect Ratio (1080 x 1350 px)
+    // Strictly fixed 1:1 Aspect Ratio (1080 x 1080 px Square)
     const W = 1080;
-    const H = 1350;
+    const H = 1080;
     const paddingX = 40;
 
     canvas.width = W;
@@ -246,8 +246,8 @@ export default function Home() {
 
     // 2. Top Header Bar
     let cy = 14;
-    const barHeight = 70;
-    ctx.font = `bold 34px ${fontFamily}`;
+    const barHeight = 60;
+    ctx.font = `bold 32px ${fontFamily}`;
     ctx.fillStyle = COLORS.text;
     ctx.textBaseline = "middle";
 
@@ -261,76 +261,76 @@ export default function Home() {
 
     cy += barHeight;
     ctx.strokeStyle = COLORS.text;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.moveTo(0, cy);
     ctx.lineTo(W, cy);
     ctx.stroke();
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, cy + 10);
-    ctx.lineTo(W, cy + 10);
+    ctx.moveTo(0, cy + 8);
+    ctx.lineTo(W, cy + 8);
     ctx.stroke();
 
-    // 3. EXPANDED HEADLINE SLOT (Up to 3 full lines allowed!)
-    const headlineSlotTop = 118;
-    const emojiPrefixWidth = 70;
+    // 3. Headline Slot (Square Layout: 2 lines max, 38px font)
+    const headlineSlotTop = 92;
+    const emojiPrefixWidth = 60;
     const maxHeadlineWidth = W - paddingX * 2 - emojiPrefixWidth;
 
-    let headlineFontSize = 46;
+    let headlineFontSize = 38;
     let headlineLines: string[] = [];
 
-    while (headlineFontSize >= 28) {
+    while (headlineFontSize >= 26) {
       const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
-      if (headlineLines.length <= 3) break;
+      if (headlineLines.length <= 2) break;
       headlineFontSize -= 2;
     }
 
-    if (headlineLines.length > 3) {
-      headlineLines = headlineLines.slice(0, 3);
-      let thirdLine = headlineLines[2];
+    if (headlineLines.length > 2) {
+      headlineLines = headlineLines.slice(0, 2);
+      let secondLine = headlineLines[1];
       const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       ctx.font = testFont;
-      while (thirdLine.length > 0 && ctx.measureText(thirdLine + "...").width > maxHeadlineWidth) {
-        thirdLine = thirdLine.slice(0, -1);
+      while (secondLine.length > 0 && ctx.measureText(secondLine + "...").width > maxHeadlineWidth) {
+        secondLine = secondLine.slice(0, -1);
       }
-      headlineLines[2] = thirdLine.trim() + "...";
+      headlineLines[1] = secondLine.trim() + "...";
     }
 
     const selectedHeadlineFont = `bold ${headlineFontSize}px ${fontFamily}`;
-    const headlineLineHeight = 52;
+    const headlineLineHeight = 44;
 
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    ctx.font = "46px sans-serif";
-    ctx.fillText(emoji || "📩", paddingX, headlineSlotTop + 38);
+    ctx.font = "40px sans-serif";
+    ctx.fillText(emoji || "📩", paddingX, headlineSlotTop + 34);
 
     ctx.font = selectedHeadlineFont;
     ctx.fillStyle = COLORS.text;
     headlineLines.forEach((line, i) => {
       const x = i === 0 ? paddingX + emojiPrefixWidth : paddingX;
-      ctx.fillText(line, x, headlineSlotTop + 38 + i * headlineLineHeight);
+      ctx.fillText(line, x, headlineSlotTop + 34 + i * headlineLineHeight);
     });
 
-    // Fixed Accent Underline Bar at y = 285
-    const underlineY = 285;
+    // Accent Underline Bar at y = 192
+    const underlineY = 192;
     ctx.strokeStyle = COLORS.accent;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.moveTo(paddingX, underlineY);
-    ctx.lineTo(paddingX + 220, underlineY);
+    ctx.lineTo(paddingX + 200, underlineY);
     ctx.stroke();
     ctx.strokeStyle = COLORS.text;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(paddingX + 230, underlineY);
+    ctx.moveTo(paddingX + 210, underlineY);
     ctx.lineTo(W - paddingX, underlineY);
     ctx.stroke();
 
-    // 4. STRICTLY FIXED IMAGE BLOCK (Y: 300 to 820, Height: 520px, Width: 1080px)
-    const imageBlockY = 300;
-    const imageBlockHeight = 520;
+    // 4. STRICTLY FIXED SQUARE IMAGE BLOCK (Y: 206 to 686, Height: 480px, Width: 1080px)
+    const imageBlockY = 206;
+    const imageBlockHeight = 480;
 
     if (uploadedImage) {
       drawImageCover(ctx, uploadedImage, 0, imageBlockY, W, imageBlockHeight);
@@ -339,36 +339,36 @@ export default function Home() {
       ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
 
-    // 5. DECREASED / COMPACT SUMMARY BOX (Y: 840 to 1245, Height: 405px -> 290px compact fit)
-    const summaryBoxTop = 845;
+    // 5. STRICTLY FIXED SUMMARY BOX (Y: 704 to 994, Height: 290px)
+    const summaryBoxTop = 704;
     const summaryBoxHeight = 290;
     const boxWidth = W - paddingX * 2;
 
-    roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 16);
+    roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 14);
     ctx.fillStyle = COLORS.accentTint;
     ctx.fill();
     ctx.strokeStyle = COLORS.border;
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    roundRect(ctx, paddingX, summaryBoxTop, 20, summaryBoxHeight, 16);
+    roundRect(ctx, paddingX, summaryBoxTop, 18, summaryBoxHeight, 14);
     ctx.fillStyle = COLORS.accent;
     ctx.fill();
-    ctx.fillRect(paddingX + 8, summaryBoxTop, 12, summaryBoxHeight);
+    ctx.fillRect(paddingX + 6, summaryBoxTop, 12, summaryBoxHeight);
 
-    const summaryFont = `bold 30px ${fontFamily}`;
-    const summaryMaxWidth = boxWidth - 60;
+    const summaryFont = `bold 28px ${fontFamily}`;
+    const summaryMaxWidth = boxWidth - 56;
     const richWords = parseFormattedTextToWords(displaySummary);
     const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
-    const summaryLineHeight = 44;
+    const summaryLineHeight = 40;
 
     ctx.font = summaryFont;
     ctx.textBaseline = "alphabetic";
-    let ty = summaryBoxTop + 38;
-    const maxSummaryLines = Math.floor((summaryBoxHeight - 38) / summaryLineHeight);
+    let ty = summaryBoxTop + 36;
+    const maxSummaryLines = Math.floor((summaryBoxHeight - 36) / summaryLineHeight);
 
     summaryLines.slice(0, maxSummaryLines).forEach((line) => {
-      let tx = paddingX + 44;
+      let tx = paddingX + 40;
       line.words.forEach((w) => {
         ctx.fillStyle = w.isHighlighted ? COLORS.accent : COLORS.text;
         ctx.fillText(w.text, tx, ty);
@@ -377,8 +377,8 @@ export default function Home() {
       ty += summaryLineHeight;
     });
 
-    // 6. STRICTLY FIXED FOOTER (Separator Y: 1270, Text Y: 1312)
-    const footerSeparatorY = 1270;
+    // 6. STRICTLY FIXED FOOTER (Separator Y: 1014, Text Y: 1052)
+    const footerSeparatorY = 1014;
     ctx.strokeStyle = COLORS.border;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -386,21 +386,21 @@ export default function Home() {
     ctx.lineTo(W - 80, footerSeparatorY);
     ctx.stroke();
 
-    const footerTextY = 1312;
+    const footerTextY = 1052;
     const footerEmoji = "📷";
     const handle = "@news.nit_iit";
-    ctx.font = "bold 32px " + fontFamily;
+    ctx.font = "bold 28px " + fontFamily;
     const handleWidth = ctx.measureText(handle).width;
-    ctx.font = "32px sans-serif";
+    ctx.font = "28px sans-serif";
     const emojiWidth = ctx.measureText(footerEmoji).width;
-    const gap = 12;
+    const gap = 10;
     const totalWidth = emojiWidth + gap + handleWidth;
     const startX = (W - totalWidth) / 2;
 
     ctx.textAlign = "left";
-    ctx.font = "32px sans-serif";
+    ctx.font = "28px sans-serif";
     ctx.fillText(footerEmoji, startX, footerTextY);
-    ctx.font = "bold 32px " + fontFamily;
+    ctx.font = "bold 28px " + fontFamily;
     ctx.fillStyle = COLORS.accent;
     ctx.fillText(handle, startX + emojiWidth + gap, footerTextY);
   }, [headline, summary, language, emoji, uploadedImage]);
@@ -594,7 +594,7 @@ export default function Home() {
         <div style={{ flex: "1 1 420px", minWidth: 340, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <canvas
             ref={canvasRef}
-            style={{ width: "100%", maxWidth: 420, aspectRatio: "4 / 5", borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
+            style={{ width: "100%", maxWidth: 420, aspectRatio: "1 / 1", borderRadius: 8, border: `1px solid ${COLORS.border}`, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
           />
           <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 420 }}>
             <button onClick={handleDownload} style={{ flex: 1, background: COLORS.text, color: "white", padding: "11px 18px", borderRadius: 8, border: "none", fontWeight: 600, cursor: "pointer" }}>
