@@ -280,16 +280,15 @@ export default function Home() {
     ctx.lineTo(W, cy + 8);
     ctx.stroke();
 
-    // 3. EXPANDED HEADLINE SLOT FOR 3 LARGE LINES (Font: 42px, Height: 155px)
+    // 3. CENTER-ALIGNED EXTRA BOLD HEADLINE SLOT (Up to 3 lines)
     const headlineSlotTop = 88;
-    const emojiPrefixWidth = 65;
-    const maxHeadlineWidth = W - paddingX * 2 - emojiPrefixWidth;
+    const maxHeadlineWidth = W - paddingX * 2 - 80;
 
     let headlineFontSize = 42;
     let headlineLines: string[] = [];
 
     while (headlineFontSize >= 28) {
-      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
+      const testFont = `900 ${headlineFontSize}px ${fontFamily}`;
       headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
       if (headlineLines.length <= 3) break;
       headlineFontSize -= 2;
@@ -298,7 +297,7 @@ export default function Home() {
     if (headlineLines.length > 3) {
       headlineLines = headlineLines.slice(0, 3);
       let thirdLine = headlineLines[2];
-      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
+      const testFont = `900 ${headlineFontSize}px ${fontFamily}`;
       ctx.font = testFont;
       while (thirdLine.length > 0 && ctx.measureText(thirdLine + "...").width > maxHeadlineWidth) {
         thirdLine = thirdLine.slice(0, -1);
@@ -306,34 +305,51 @@ export default function Home() {
       headlineLines[2] = thirdLine.trim() + "...";
     }
 
-    const selectedHeadlineFont = `bold ${headlineFontSize}px ${fontFamily}`;
+    const selectedHeadlineFont = `900 ${headlineFontSize}px ${fontFamily}`;
     const headlineLineHeight = 50;
 
-    ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    ctx.font = "42px sans-serif";
-    ctx.fillText(emoji || "📩", paddingX, headlineSlotTop + 38);
-
-    ctx.font = selectedHeadlineFont;
     ctx.fillStyle = COLORS.text;
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = COLORS.text;
+
+    const currentEmoji = emoji || "📩";
+    ctx.font = "42px sans-serif";
+    const emojiWidth = ctx.measureText(currentEmoji).width;
+
     headlineLines.forEach((line, i) => {
-      const x = i === 0 ? paddingX + emojiPrefixWidth : paddingX;
-      ctx.fillText(line, x, headlineSlotTop + 38 + i * headlineLineHeight);
+      ctx.font = selectedHeadlineFont;
+      const textWidth = ctx.measureText(line).width;
+      const yPos = headlineSlotTop + 38 + i * headlineLineHeight;
+
+      if (i === 0) {
+        const gap = 12;
+        const totalW = emojiWidth + gap + textWidth;
+        const startX = (W - totalW) / 2;
+
+        ctx.font = "42px sans-serif";
+        ctx.fillText(currentEmoji, startX, yPos);
+
+        ctx.font = selectedHeadlineFont;
+        ctx.fillText(line, startX + emojiWidth + gap, yPos);
+        ctx.strokeText(line, startX + emojiWidth + gap, yPos);
+      } else {
+        const startX = (W - textWidth) / 2;
+        ctx.fillText(line, startX, yPos);
+        ctx.strokeText(line, startX, yPos);
+      }
     });
 
-    // Fixed Accent Underline Bar at y = 245
+    // Centered Accent Underline Bar at y = 245
     const underlineY = 245;
+    const barWidth = 240;
+    const barX = (W - barWidth) / 2;
+
     ctx.strokeStyle = COLORS.accent;
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(paddingX, underlineY);
-    ctx.lineTo(paddingX + 220, underlineY);
-    ctx.stroke();
-    ctx.strokeStyle = COLORS.text;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(paddingX + 230, underlineY);
-    ctx.lineTo(W - paddingX, underlineY);
+    ctx.moveTo(barX, underlineY);
+    ctx.lineTo(barX + barWidth, underlineY);
     ctx.stroke();
 
     // 4. STRICTLY FIXED SQUARE IMAGE BLOCK (Y: 260 to 690, Height: 430px, Width: 1080px)
