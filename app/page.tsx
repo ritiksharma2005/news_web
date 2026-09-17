@@ -313,9 +313,9 @@ export default function Home() {
     ctx.lineWidth = 1.2;
     ctx.strokeStyle = COLORS.text;
 
-    const currentEmoji = emoji || "📩";
+    const headlineEmoji = emoji || "📩";
     ctx.font = "40px sans-serif";
-    const emojiWidth = ctx.measureText(currentEmoji).width;
+    const headlineEmojiW = ctx.measureText(headlineEmoji).width;
 
     headlineLines.forEach((line, i) => {
       ctx.font = selectedHeadlineFont;
@@ -323,20 +323,20 @@ export default function Home() {
       const yPos = headlineSlotTop + 36 + i * headlineLineHeight;
 
       if (i === 0) {
-        const gap = 12;
-        const totalW = emojiWidth + gap + textWidth;
-        const startX = (W - totalW) / 2;
+        const headlineGap = 12;
+        const totalLineW = headlineEmojiW + headlineGap + textWidth;
+        const lineStartX = (W - totalLineW) / 2;
 
         ctx.font = "40px sans-serif";
-        ctx.fillText(currentEmoji, startX, yPos);
+        ctx.fillText(headlineEmoji, lineStartX, yPos);
 
         ctx.font = selectedHeadlineFont;
-        ctx.fillText(line, startX + emojiWidth + gap, yPos);
-        ctx.strokeText(line, startX + emojiWidth + gap, yPos);
+        ctx.fillText(line, lineStartX + headlineEmojiW + headlineGap, yPos);
+        ctx.strokeText(line, lineStartX + headlineEmojiW + headlineGap, yPos);
       } else {
-        const startX = (W - textWidth) / 2;
-        ctx.fillText(line, startX, yPos);
-        ctx.strokeText(line, startX, yPos);
+        const lineStartX = (W - textWidth) / 2;
+        ctx.fillText(line, lineStartX, yPos);
+        ctx.strokeText(line, lineStartX, yPos);
       }
     });
 
@@ -416,17 +416,17 @@ export default function Home() {
     ctx.font = "bold 28px " + fontFamily;
     const handleWidth = ctx.measureText(handle).width;
     ctx.font = "28px sans-serif";
-    const emojiWidth = ctx.measureText(footerEmoji).width;
-    const gap = 10;
-    const totalWidth = emojiWidth + gap + handleWidth;
-    const startX = (W - totalWidth) / 2;
+    const footerEmojiWidth = ctx.measureText(footerEmoji).width;
+    const footerGap = 10;
+    const footerTotalWidth = footerEmojiWidth + footerGap + handleWidth;
+    const footerStartX = (W - footerTotalWidth) / 2;
 
     ctx.textAlign = "left";
     ctx.font = "28px sans-serif";
-    ctx.fillText(footerEmoji, startX, footerTextY);
+    ctx.fillText(footerEmoji, footerStartX, footerTextY);
     ctx.font = "bold 28px " + fontFamily;
     ctx.fillStyle = COLORS.accent;
-    ctx.fillText(handle, startX + emojiWidth + gap, footerTextY);
+    ctx.fillText(handle, footerStartX + footerEmojiWidth + footerGap, footerTextY);
   }, [headline, summary, language, emoji, uploadedImage]);
 
   useEffect(() => {
