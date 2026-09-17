@@ -277,15 +277,17 @@ export default function Home() {
     ctx.lineTo(W, cy + 8);
     ctx.stroke();
 
-    // 3. CENTER-ALIGNED HEADLINE SLOT (Starts cleanly at y = 85px)
-    const headlineSlotTop = 85;
-    const maxHeadlineWidth = W - paddingX * 2;
+    // 3. CENTER-ALIGNED HEADLINE SLOT (Starts at y = 75px, Underline at y = 224px)
+    const headlineSlotTop = 75;
+    const underlineY = 224;
+    const availableSlotH = underlineY - headlineSlotTop; // 149px
+    const maxHeadlineWidth = W - paddingX * 2; // 1000px
 
-    let headlineFontSize = 38;
+    let headlineFontSize = 44;
     let headlineLines: string[] = [];
 
-    while (headlineFontSize >= 26) {
-      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
+    while (headlineFontSize >= 28) {
+      const testFont = `900 ${headlineFontSize}px ${fontFamily}`;
       headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
       if (headlineLines.length <= 3) break;
       headlineFontSize -= 2;
@@ -294,7 +296,7 @@ export default function Home() {
     if (headlineLines.length > 3) {
       headlineLines = headlineLines.slice(0, 3);
       let thirdLine = headlineLines[2];
-      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
+      const testFont = `900 ${headlineFontSize}px ${fontFamily}`;
       ctx.font = testFont;
       while (thirdLine.length > 0 && ctx.measureText(thirdLine + "...").width > maxHeadlineWidth) {
         thirdLine = thirdLine.slice(0, -1);
@@ -302,14 +304,18 @@ export default function Home() {
       headlineLines[2] = thirdLine.trim() + "...";
     }
 
-    const selectedHeadlineFont = `bold ${headlineFontSize}px ${fontFamily}`;
-    const headlineLineHeight = 44;
+    const selectedHeadlineFont = `900 ${headlineFontSize}px ${fontFamily}`;
+    const headlineLineHeight = headlineFontSize + 8;
     const headlineEmoji = emoji || "📩";
+
+    const totalHeadlineH = (headlineLines.length - 1) * headlineLineHeight + headlineFontSize;
+    const startY = headlineSlotTop + Math.max(0, (availableSlotH - totalHeadlineH) / 2);
 
     ctx.textBaseline = "top";
 
     if (headlineLines.length > 0) {
-      ctx.font = "38px sans-serif";
+      const emojiFontSize = Math.min(headlineFontSize, 42);
+      ctx.font = `${emojiFontSize}px sans-serif`;
       const emojiW = ctx.measureText(headlineEmoji).width;
       const emojiGap = 12;
 
@@ -319,18 +325,18 @@ export default function Home() {
       const line0StartX = (W - line0TotalW) / 2;
 
       // Draw Emoji for line 0
-      ctx.font = "38px sans-serif";
+      ctx.font = `${emojiFontSize}px sans-serif`;
       ctx.textAlign = "left";
-      ctx.fillText(headlineEmoji, line0StartX, headlineSlotTop);
+      ctx.fillText(headlineEmoji, line0StartX, startY);
 
       // Draw Line 0 text
       ctx.font = selectedHeadlineFont;
       ctx.fillStyle = COLORS.text;
-      ctx.fillText(headlineLines[0], line0StartX + emojiW + emojiGap, headlineSlotTop);
+      ctx.fillText(headlineLines[0], line0StartX + emojiW + emojiGap, startY);
 
       // Lines 1 & 2 centered at W / 2
       for (let i = 1; i < headlineLines.length; i++) {
-        const yPos = headlineSlotTop + i * headlineLineHeight;
+        const yPos = startY + i * headlineLineHeight;
         ctx.font = selectedHeadlineFont;
         ctx.textAlign = "center";
         ctx.fillStyle = COLORS.text;
@@ -338,9 +344,8 @@ export default function Home() {
       }
     }
 
-    // Accent Underline Bar at y = 222 (Centered)
-    const underlineY = 222;
-    const centerBarW = 240;
+    // Accent Underline Bar at y = 224 (Centered)
+    const centerBarW = 260;
     ctx.strokeStyle = COLORS.accent;
     ctx.lineWidth = 6;
     ctx.beginPath();
