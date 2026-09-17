@@ -254,7 +254,7 @@ export default function Home() {
 
     // 2. Top Header Bar
     let cy = 14;
-    const barHeight = 56;
+    const barHeight = 54;
     ctx.font = `bold 32px ${fontFamily}`;
     ctx.fillStyle = COLORS.text;
     ctx.textBaseline = "middle";
@@ -276,18 +276,18 @@ export default function Home() {
     ctx.stroke();
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, cy + 8);
-    ctx.lineTo(W, cy + 8);
+    ctx.moveTo(0, cy + 7);
+    ctx.lineTo(W, cy + 7);
     ctx.stroke();
 
     // 3. CENTER-ALIGNED EXTRA BOLD HEADLINE SLOT (Up to 3 lines)
-    const headlineSlotTop = 88;
+    const headlineSlotTop = 82;
     const maxHeadlineWidth = W - paddingX * 2 - 80;
 
-    let headlineFontSize = 42;
+    let headlineFontSize = 40;
     let headlineLines: string[] = [];
 
-    while (headlineFontSize >= 28) {
+    while (headlineFontSize >= 26) {
       const testFont = `900 ${headlineFontSize}px ${fontFamily}`;
       headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
       if (headlineLines.length <= 3) break;
@@ -306,7 +306,7 @@ export default function Home() {
     }
 
     const selectedHeadlineFont = `900 ${headlineFontSize}px ${fontFamily}`;
-    const headlineLineHeight = 50;
+    const headlineLineHeight = 48;
 
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = COLORS.text;
@@ -314,20 +314,20 @@ export default function Home() {
     ctx.strokeStyle = COLORS.text;
 
     const currentEmoji = emoji || "📩";
-    ctx.font = "42px sans-serif";
+    ctx.font = "40px sans-serif";
     const emojiWidth = ctx.measureText(currentEmoji).width;
 
     headlineLines.forEach((line, i) => {
       ctx.font = selectedHeadlineFont;
       const textWidth = ctx.measureText(line).width;
-      const yPos = headlineSlotTop + 38 + i * headlineLineHeight;
+      const yPos = headlineSlotTop + 36 + i * headlineLineHeight;
 
       if (i === 0) {
         const gap = 12;
         const totalW = emojiWidth + gap + textWidth;
         const startX = (W - totalW) / 2;
 
-        ctx.font = "42px sans-serif";
+        ctx.font = "40px sans-serif";
         ctx.fillText(currentEmoji, startX, yPos);
 
         ctx.font = selectedHeadlineFont;
@@ -340,8 +340,8 @@ export default function Home() {
       }
     });
 
-    // Centered Accent Underline Bar at y = 245
-    const underlineY = 245;
+    // Centered Accent Underline Bar at y = 232
+    const underlineY = 232;
     const barWidth = 240;
     const barX = (W - barWidth) / 2;
 
@@ -352,9 +352,9 @@ export default function Home() {
     ctx.lineTo(barX + barWidth, underlineY);
     ctx.stroke();
 
-    // 4. INCREASED IMAGE AREA (Y: 258 to 758, Height: 500px, Width: 1080px)
-    const imageBlockY = 258;
-    const imageBlockHeight = 500;
+    // 4. MUCH LARGER IMAGE BLOCK (Y: 244 to 804, Height: 560px, Width: 1080px)
+    const imageBlockY = 244;
+    const imageBlockHeight = 560;
 
     if (uploadedImage) {
       drawImageCover(ctx, uploadedImage, 0, imageBlockY, W, imageBlockHeight);
@@ -363,9 +363,9 @@ export default function Home() {
       ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
 
-    // 5. DECREASED / COMPACT SUMMARY BOX (Y: 774 to 999, Height: 225px)
-    const summaryBoxTop = 774;
-    const summaryBoxHeight = 225;
+    // 5. COMPACT SUMMARY BOX (Y: 818 to 998, Height: 180px)
+    const summaryBoxTop = 818;
+    const summaryBoxHeight = 180;
     const boxWidth = W - paddingX * 2;
 
     roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 14);
@@ -380,16 +380,16 @@ export default function Home() {
     ctx.fill();
     ctx.fillRect(paddingX + 6, summaryBoxTop, 12, summaryBoxHeight);
 
-    const summaryFont = `bold 28px ${fontFamily}`;
+    const summaryFont = `bold 26px ${fontFamily}`;
     const summaryMaxWidth = boxWidth - 56;
     const richWords = parseFormattedTextToWords(displaySummary);
     const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
-    const summaryLineHeight = 38;
+    const summaryLineHeight = 36;
 
     ctx.font = summaryFont;
     ctx.textBaseline = "alphabetic";
-    let ty = summaryBoxTop + 34;
-    const maxSummaryLines = Math.floor((summaryBoxHeight - 34) / summaryLineHeight);
+    let ty = summaryBoxTop + 32;
+    const maxSummaryLines = Math.floor((summaryBoxHeight - 32) / summaryLineHeight);
 
     summaryLines.slice(0, maxSummaryLines).forEach((line) => {
       let tx = paddingX + 40;
