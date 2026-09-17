@@ -13,89 +13,86 @@ const COLORS = {
   placeholder: "#e2e8f0",
 };
 
-interface RichWord {
+interface SummaryWord {
   text: string;
   isHighlighted: boolean;
 }
 
-interface RichLine {
-  words: RichWord[];
+interface SummaryLine {
+  words: SummaryWord[];
 }
 
-function parseFormattedTextToWords(text: string): RichWord[] {
-  const words: RichWord[] = [];
+function parseSummaryTokens(text: string): { text: string; isHighlighted: boolean }[] {
+  const tokens: { text: string; isHighlighted: boolean }[] = [];
   const regex = /(\*\*.*?\*\*|\*.*?\*)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      const normalPart = text.slice(lastIndex, match.index);
-      const splitNormal = normalPart.split(/(\s+)/);
-      for (const w of splitNormal) {
-        if (w) words.push({ text: w, isHighlighted: false });
-      }
+      tokens.push({
+        text: text.slice(lastIndex, match.index),
+        isHighlighted: false,
+      });
     }
-    const rawMatch = match[0];
-    const cleanText = rawMatch.replace(/^\*+|\*+$/g, "");
-    const splitClean = cleanText.split(/(\s+)/);
-    for (const w of splitClean) {
-      if (w) words.push({ text: w, isHighlighted: true });
-    }
+    const cleanText = match[0].replace(/^\*+|\*+$/g, "");
+    tokens.push({
+      text: cleanText,
+      isHighlighted: true,
+    });
     lastIndex = regex.lastIndex;
   }
-
   if (lastIndex < text.length) {
-    const normalPart = text.slice(lastIndex);
-    const splitNormal = normalPart.split(/(\s+)/);
-    for (const w of splitNormal) {
-      if (w) words.push({ text: w, isHighlighted: false });
+    tokens.push({
+      text: text.slice(lastIndex),
+      isHighlighted: false,
+    });
+  }
+  return tokens;
+}
+
+function getSummaryWords(text: string): SummaryWord[] {
+  const tokens = parseSummaryTokens(text);
+  const words: SummaryWord[] = [];
+  for (const t of tokens) {
+    const splitWords = t.text.trim().split(/\s+/);
+    for (const w of splitWords) {
+      if (w) {
+        words.push({ text: w, isHighlighted: t.isHighlighted });
+      }
     }
   }
-
   return words;
 }
 
-function wrapRichWords(
+function wrapSummaryWords(
   ctx: CanvasRenderingContext2D,
-  words: RichWord[],
+  words: SummaryWord[],
   font: string,
   maxWidth: number
-): RichLine[] {
+): SummaryLine[] {
   ctx.font = font;
-  const lines: RichLine[] = [];
-  let currentLine: RichWord[] = [];
-  let currentWidth = 0;
+  const spaceWidth = ctx.measureText(" ").width;
+  const lines: SummaryLine[] = [];
+  let currentLine: SummaryWord[] = [];
+  let currentLineWidth = 0;
 
-  for (const item of words) {
-    if (item.text === "\n") {
-      lines.push({ words: currentLine });
-      currentLine = [];
-      currentWidth = 0;
-      continue;
-    }
+  for (const w of words) {
+    const wordWidth = ctx.measureText(w.text).width;
+    const addedWidth = currentLine.length === 0 ? wordWidth : spaceWidth + wordWidth;
 
-    const itemWidth = ctx.measureText(item.text).width;
-
-    if (currentWidth + itemWidth <= maxWidth || currentLine.length === 0) {
-      currentLine.push(item);
-      currentWidth += itemWidth;
+    if (currentLineWidth + addedWidth <= maxWidth || currentLine.length === 0) {
+      currentLine.push(w);
+      currentLineWidth += addedWidth;
     } else {
       lines.push({ words: currentLine });
-      if (item.text.trim() === "") {
-        currentLine = [];
-        currentWidth = 0;
-      } else {
-        currentLine = [item];
-        currentWidth = itemWidth;
-      }
+      currentLine = [w];
+      currentLineWidth = wordWidth;
     }
   }
-
   if (currentLine.length > 0) {
     lines.push({ words: currentLine });
   }
-
   return lines;
 }
 
@@ -254,7 +251,7 @@ export default function Home() {
 
     // 2. Top Header Bar
     let cy = 14;
-    const barHeight = 54;
+    const barHeight = 46;
     ctx.font = `bold 32px ${fontFamily}`;
     ctx.fillStyle = COLORS.text;
     ctx.textBaseline = "middle";
@@ -276,15 +273,15 @@ export default function Home() {
     ctx.stroke();
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, cy + 7);
-    ctx.lineTo(W, cy + 7);
+    ctx.moveTo(0, cy + 8);
+    ctx.lineTo(W, cy + 8);
     ctx.stroke();
 
-    // 3. CENTER-ALIGNED EXTRA BOLD HEADLINE SLOT (Up to 3 lines)
-    const headlineSlotTop = 82;
+    // 3. CENTER-ALIGNED EXTRA BOLD HEADLINE SLOT (Starts cleanly at y = 80px)
+    const headlineSlotTop = 80;
     const maxHeadlineWidth = W - paddingX * 2 - 80;
 
-    let headlineFontSize = 40;
+    let headlineFontSize = 38;
     let headlineLines: string[] = [];
 
     while (headlineFontSize >= 26) {
@@ -306,28 +303,28 @@ export default function Home() {
     }
 
     const selectedHeadlineFont = `900 ${headlineFontSize}px ${fontFamily}`;
-    const headlineLineHeight = 48;
+    const headlineLineHeight = 44;
 
-    ctx.textBaseline = "alphabetic";
+    ctx.textBaseline = "top";
     ctx.fillStyle = COLORS.text;
     ctx.lineWidth = 1.2;
     ctx.strokeStyle = COLORS.text;
 
     const headlineEmoji = emoji || "📩";
-    ctx.font = "40px sans-serif";
+    ctx.font = "38px sans-serif";
     const headlineEmojiW = ctx.measureText(headlineEmoji).width;
 
     headlineLines.forEach((line, i) => {
       ctx.font = selectedHeadlineFont;
       const textWidth = ctx.measureText(line).width;
-      const yPos = headlineSlotTop + 36 + i * headlineLineHeight;
+      const yPos = headlineSlotTop + i * headlineLineHeight;
 
       if (i === 0) {
         const headlineGap = 12;
         const totalLineW = headlineEmojiW + headlineGap + textWidth;
         const lineStartX = (W - totalLineW) / 2;
 
-        ctx.font = "40px sans-serif";
+        ctx.font = "38px sans-serif";
         ctx.fillText(headlineEmoji, lineStartX, yPos);
 
         ctx.font = selectedHeadlineFont;
@@ -340,8 +337,8 @@ export default function Home() {
       }
     });
 
-    // Centered Accent Underline Bar at y = 232
-    const underlineY = 232;
+    // Centered Accent Underline Bar at y = 222
+    const underlineY = 222;
     const barWidth = 240;
     const barX = (W - barWidth) / 2;
 
@@ -352,9 +349,9 @@ export default function Home() {
     ctx.lineTo(barX + barWidth, underlineY);
     ctx.stroke();
 
-    // 4. MUCH LARGER IMAGE BLOCK (Y: 244 to 804, Height: 560px, Width: 1080px)
-    const imageBlockY = 244;
-    const imageBlockHeight = 560;
+    // 4. FIXED IMAGE BLOCK (Y: 236 to 716, Height: 480px, Width: 1080px)
+    const imageBlockY = 236;
+    const imageBlockHeight = 480;
 
     if (uploadedImage) {
       drawImageCover(ctx, uploadedImage, 0, imageBlockY, W, imageBlockHeight);
@@ -363,9 +360,9 @@ export default function Home() {
       ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
 
-    // 5. COMPACT SUMMARY BOX (Y: 818 to 998, Height: 180px)
-    const summaryBoxTop = 818;
-    const summaryBoxHeight = 180;
+    // 5. FIXED SUMMARY BOX (Y: 730 to 995, Height: 265px, Width: 1000px)
+    const summaryBoxTop = 730;
+    const summaryBoxHeight = 265;
     const boxWidth = W - paddingX * 2;
 
     roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 14);
@@ -380,23 +377,26 @@ export default function Home() {
     ctx.fill();
     ctx.fillRect(paddingX + 6, summaryBoxTop, 12, summaryBoxHeight);
 
-    const summaryFont = `bold 26px ${fontFamily}`;
+    const summaryFont = `bold 28px ${fontFamily}`;
     const summaryMaxWidth = boxWidth - 56;
-    const richWords = parseFormattedTextToWords(displaySummary);
-    const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
-    const summaryLineHeight = 36;
+    const words = getSummaryWords(displaySummary);
+    const summaryLines = wrapSummaryWords(ctx, words, summaryFont, summaryMaxWidth);
+    const summaryLineHeight = 38;
 
     ctx.font = summaryFont;
-    ctx.textBaseline = "alphabetic";
-    let ty = summaryBoxTop + 32;
+    ctx.textBaseline = "top";
+    let ty = summaryBoxTop + 24;
     const maxSummaryLines = Math.floor((summaryBoxHeight - 32) / summaryLineHeight);
 
     summaryLines.slice(0, maxSummaryLines).forEach((line) => {
-      let tx = paddingX + 40;
+      let tx = paddingX + 44;
       line.words.forEach((w) => {
+        ctx.font = summaryFont;
         ctx.fillStyle = w.isHighlighted ? COLORS.accent : COLORS.text;
         ctx.fillText(w.text, tx, ty);
-        tx += ctx.measureText(w.text).width;
+        const wordW = ctx.measureText(w.text).width;
+        const spaceW = ctx.measureText(" ").width;
+        tx += wordW + spaceW;
       });
       ty += summaryLineHeight;
     });
@@ -410,7 +410,7 @@ export default function Home() {
     ctx.lineTo(W - 80, footerSeparatorY);
     ctx.stroke();
 
-    const footerTextY = 1052;
+    const footerTextY = 1042;
     const footerEmoji = "📷";
     const handle = "@news.nit_iit";
     ctx.font = "bold 28px " + fontFamily;
@@ -422,6 +422,7 @@ export default function Home() {
     const footerStartX = (W - footerTotalWidth) / 2;
 
     ctx.textAlign = "left";
+    ctx.textBaseline = "top";
     ctx.font = "28px sans-serif";
     ctx.fillText(footerEmoji, footerStartX, footerTextY);
     ctx.font = "bold 28px " + fontFamily;
