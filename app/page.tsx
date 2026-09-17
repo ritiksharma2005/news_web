@@ -277,15 +277,16 @@ export default function Home() {
     ctx.lineTo(W, cy + 8);
     ctx.stroke();
 
-    // 3. CENTER-ALIGNED EXTRA BOLD HEADLINE SLOT (Starts cleanly at y = 80px)
-    const headlineSlotTop = 80;
-    const maxHeadlineWidth = W - paddingX * 2 - 80;
+    // 3. CLEAN LEFT-ALIGNED HEADLINE SLOT (Starts cleanly at y = 85px)
+    const headlineSlotTop = 85;
+    const textStartX = paddingX + 56; // 96px
+    const maxHeadlineWidth = W - textStartX - paddingX;
 
     let headlineFontSize = 38;
     let headlineLines: string[] = [];
 
     while (headlineFontSize >= 26) {
-      const testFont = `900 ${headlineFontSize}px ${fontFamily}`;
+      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       headlineLines = wrapText(ctx, displayHeadline, testFont, maxHeadlineWidth);
       if (headlineLines.length <= 3) break;
       headlineFontSize -= 2;
@@ -294,7 +295,7 @@ export default function Home() {
     if (headlineLines.length > 3) {
       headlineLines = headlineLines.slice(0, 3);
       let thirdLine = headlineLines[2];
-      const testFont = `900 ${headlineFontSize}px ${fontFamily}`;
+      const testFont = `bold ${headlineFontSize}px ${fontFamily}`;
       ctx.font = testFont;
       while (thirdLine.length > 0 && ctx.measureText(thirdLine + "...").width > maxHeadlineWidth) {
         thirdLine = thirdLine.slice(0, -1);
@@ -302,51 +303,36 @@ export default function Home() {
       headlineLines[2] = thirdLine.trim() + "...";
     }
 
-    const selectedHeadlineFont = `900 ${headlineFontSize}px ${fontFamily}`;
+    const selectedHeadlineFont = `bold ${headlineFontSize}px ${fontFamily}`;
     const headlineLineHeight = 44;
 
+    ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillStyle = COLORS.text;
-    ctx.lineWidth = 1.2;
-    ctx.strokeStyle = COLORS.text;
 
     const headlineEmoji = emoji || "📩";
     ctx.font = "38px sans-serif";
-    const headlineEmojiW = ctx.measureText(headlineEmoji).width;
+    ctx.fillText(headlineEmoji, paddingX, headlineSlotTop);
 
+    ctx.font = selectedHeadlineFont;
     headlineLines.forEach((line, i) => {
-      ctx.font = selectedHeadlineFont;
-      const textWidth = ctx.measureText(line).width;
       const yPos = headlineSlotTop + i * headlineLineHeight;
-
-      if (i === 0) {
-        const headlineGap = 12;
-        const totalLineW = headlineEmojiW + headlineGap + textWidth;
-        const lineStartX = (W - totalLineW) / 2;
-
-        ctx.font = "38px sans-serif";
-        ctx.fillText(headlineEmoji, lineStartX, yPos);
-
-        ctx.font = selectedHeadlineFont;
-        ctx.fillText(line, lineStartX + headlineEmojiW + headlineGap, yPos);
-        ctx.strokeText(line, lineStartX + headlineEmojiW + headlineGap, yPos);
-      } else {
-        const lineStartX = (W - textWidth) / 2;
-        ctx.fillText(line, lineStartX, yPos);
-        ctx.strokeText(line, lineStartX, yPos);
-      }
+      ctx.fillText(line, textStartX, yPos);
     });
 
-    // Centered Accent Underline Bar at y = 222
+    // Accent Underline Bar at y = 222 (Left Aligned)
     const underlineY = 222;
-    const barWidth = 240;
-    const barX = (W - barWidth) / 2;
-
     ctx.strokeStyle = COLORS.accent;
     ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(barX, underlineY);
-    ctx.lineTo(barX + barWidth, underlineY);
+    ctx.moveTo(paddingX, underlineY);
+    ctx.lineTo(paddingX + 240, underlineY);
+    ctx.stroke();
+    ctx.strokeStyle = COLORS.text;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(paddingX + 250, underlineY);
+    ctx.lineTo(W - paddingX, underlineY);
     ctx.stroke();
 
     // 4. FIXED IMAGE BLOCK (Y: 236 to 716, Height: 480px, Width: 1080px)
@@ -360,7 +346,7 @@ export default function Home() {
       ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
 
-    // 5. FIXED SUMMARY BOX (Y: 730 to 995, Height: 265px, Width: 1000px)
+    // 5. CLEAN LEFT-ALIGNED SUMMARY BOX (Y: 730 to 995, Height: 265px, Width: 1000px)
     const summaryBoxTop = 730;
     const summaryBoxHeight = 265;
     const boxWidth = W - paddingX * 2;
@@ -384,12 +370,13 @@ export default function Home() {
     const summaryLineHeight = 38;
 
     ctx.font = summaryFont;
+    ctx.textAlign = "left";
     ctx.textBaseline = "top";
     let ty = summaryBoxTop + 24;
     const maxSummaryLines = Math.floor((summaryBoxHeight - 32) / summaryLineHeight);
 
     summaryLines.slice(0, maxSummaryLines).forEach((line) => {
-      let tx = paddingX + 44;
+      let tx = paddingX + 36; // Clean left alignment at x = 76px
       line.words.forEach((w) => {
         ctx.font = summaryFont;
         ctx.fillStyle = w.isHighlighted ? COLORS.accent : COLORS.text;
@@ -401,7 +388,7 @@ export default function Home() {
       ty += summaryLineHeight;
     });
 
-    // 6. STRICTLY FIXED FOOTER (Separator Y: 1014, Text Y: 1052)
+    // 6. STRICTLY FIXED FOOTER (Separator Y: 1014, Text Y: 1042)
     const footerSeparatorY = 1014;
     ctx.strokeStyle = COLORS.border;
     ctx.lineWidth = 2;
