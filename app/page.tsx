@@ -352,9 +352,9 @@ export default function Home() {
     ctx.lineTo(barX + barWidth, underlineY);
     ctx.stroke();
 
-    // 4. STRICTLY FIXED SQUARE IMAGE BLOCK (Y: 260 to 690, Height: 430px, Width: 1080px)
-    const imageBlockY = 260;
-    const imageBlockHeight = 430;
+    // 4. INCREASED IMAGE AREA (Y: 258 to 758, Height: 500px, Width: 1080px)
+    const imageBlockY = 258;
+    const imageBlockHeight = 500;
 
     if (uploadedImage) {
       drawImageCover(ctx, uploadedImage, 0, imageBlockY, W, imageBlockHeight);
@@ -363,9 +363,9 @@ export default function Home() {
       ctx.fillRect(0, imageBlockY, W, imageBlockHeight);
     }
 
-    // 5. STRICTLY FIXED SUMMARY BOX (Y: 708 to 993, Height: 285px)
-    const summaryBoxTop = 708;
-    const summaryBoxHeight = 285;
+    // 5. DECREASED / COMPACT SUMMARY BOX (Y: 774 to 999, Height: 225px)
+    const summaryBoxTop = 774;
+    const summaryBoxHeight = 225;
     const boxWidth = W - paddingX * 2;
 
     roundRect(ctx, paddingX, summaryBoxTop, boxWidth, summaryBoxHeight, 14);
@@ -384,12 +384,12 @@ export default function Home() {
     const summaryMaxWidth = boxWidth - 56;
     const richWords = parseFormattedTextToWords(displaySummary);
     const summaryLines = wrapRichWords(ctx, richWords, summaryFont, summaryMaxWidth);
-    const summaryLineHeight = 40;
+    const summaryLineHeight = 38;
 
     ctx.font = summaryFont;
     ctx.textBaseline = "alphabetic";
-    let ty = summaryBoxTop + 36;
-    const maxSummaryLines = Math.floor((summaryBoxHeight - 36) / summaryLineHeight);
+    let ty = summaryBoxTop + 34;
+    const maxSummaryLines = Math.floor((summaryBoxHeight - 34) / summaryLineHeight);
 
     summaryLines.slice(0, maxSummaryLines).forEach((line) => {
       let tx = paddingX + 40;
